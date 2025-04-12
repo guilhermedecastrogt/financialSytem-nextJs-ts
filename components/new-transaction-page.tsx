@@ -63,13 +63,13 @@ export function NewTransactionPage() {
   async function fetchData(){
     try{
       const revenueCategories = await fetch("/api/revenues/category")
-      //const spentCategories = await fetch("/api/spents/category")
+      const spentCategories = await fetch("/api/spents/category")
 
       if(!revenueCategories /*|| !spentCategories*/){
         throw new Error("Revenue category or spent category not found")
       }
       setRevenueCategories(await revenueCategories.json())
-      //setSpentCategories(await spentCategories.json())
+      setSpentCategories(await spentCategories.json())
     }
     catch(error){
       console.log("erro ao carregar dados", error)
@@ -145,7 +145,7 @@ export function NewTransactionPage() {
       if (recurrenceType === "single") {
         const addSpent = {
           name,
-          date: date || new Date(),
+          date: date ? new Date(date).toISOString() : new Date().toISOString(),
           value,
           status,
           description,
