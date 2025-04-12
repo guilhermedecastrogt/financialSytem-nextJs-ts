@@ -18,7 +18,9 @@ export async function POST(req: Request) {
 
         const { name, date, value, status, description, categories } = body;
 
-        if(!name || !date || !status || !categories) {
+        console.log(body);
+
+        if(!name || !date || !status || !categories || !value) {
             return NextResponse.json(
                 { error: "Campos incompletos"},
                 { status: 400 }

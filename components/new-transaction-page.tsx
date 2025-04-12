@@ -149,7 +149,9 @@ export function NewTransactionPage() {
           value,
           status,
           description,
-          categories: selectedCategories,
+          categories: {
+            connect: selectedCategories.map(id => ({ id }))
+          }
         }
         const res = await fetch("/api/spents/spent", {
           method: "POST",
@@ -165,12 +167,14 @@ export function NewTransactionPage() {
       } else if (recurrenceType === "monthly") {
         const addMonthlySpent = {
           name,
-          date: date || new Date(),
+          date: date ? new Date(date).toISOString() : new Date().toISOString(),
           value,
           installmentNumber: Number.parseInt(installments),
           status,
           description,
-          categories: selectedCategories,
+          categories: {
+            connect: selectedCategories.map(id => ({ id }))
+          },
         }
         const res = await fetch("/api/spents/monthlySpent", {
           method: "POST",
