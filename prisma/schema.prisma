@@ -1,0 +1,108 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model RevenueCategory {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  revenues        Revenue[]
+  monthlyRevenues MonthlyRevenue[]
+}
+
+model SpentCategory {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relações
+  spents        Spent[]
+  monthlySpents MonthlySpent[]
+  annualSpents  AnnualSpent[]
+}
+
+model Revenue {
+  id          String   @id @default(uuid())
+  name        String
+  createdAt   DateTime @default(now())
+  date        DateTime
+  value       Float
+  status      String // "pago" ou "pendente"
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  categories RevenueCategory[]
+}
+
+model MonthlyRevenue {
+  id                String   @id @default(uuid())
+  name              String
+  createdAt         DateTime @default(now())
+  date              DateTime
+  value             Float
+  installmentNumber Int
+  status            Boolean
+  description       String?
+  updatedAt         DateTime @updatedAt
+
+  // Relações
+  categories RevenueCategory[]
+}
+
+model Spent {
+  id          String   @id @default(uuid())
+  name        String
+  createdAt   DateTime @default(now())
+  date        DateTime
+  value       Float
+  status      Boolean
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  categories SpentCategory[]
+}
+
+model MonthlySpent {
+  id                String   @id @default(uuid())
+  name              String
+  createdAt         DateTime @default(now())
+  date              DateTime
+  value             Float
+  installmentNumber Int
+  status            Boolean
+  description       String?
+  updatedAt         DateTime @updatedAt
+
+  // Relações
+  categories SpentCategory[]
+}
+
+model AnnualSpent {
+  id          String   @id @default(uuid())
+  name        String
+  createdAt   DateTime @default(now())
+  date        DateTime
+  value       Float
+  status      Boolean
+  description String?
+  updatedAt   DateTime @updatedAt
+
+  // Relações
+  categories SpentCategory[]
+}
