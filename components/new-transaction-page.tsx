@@ -194,7 +194,9 @@ export function NewTransactionPage() {
           value,
           status,
           description,
-          categories: selectedCategories,
+          categories: {
+            connect: selectedCategories.map(id => ({ id }))
+          },
         }
         const res = await fetch("/api/spents/annualSpent", {
           method: "POST",
