@@ -190,7 +190,7 @@ export function NewTransactionPage() {
       } else {
         const addAnnualSpent = {
           name,
-          date: date || new Date(),
+          date: date ? new Date(date).toISOString() : new Date().toISOString(),
           value,
           status,
           description,
