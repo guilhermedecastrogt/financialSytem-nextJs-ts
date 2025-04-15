@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import {useEffect, useState} from "react"
 import { Check, Edit, MoreHorizontal, Plus, Search, Tag, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,10 +27,16 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { slugify } from "@/lib/utils"
-import { useData } from "@/lib/data-context"
+import {NextResponse} from "next/server";
+
+type Category = {
+  id: string,
+  name: string,
+  revenueCount: number,
+}
 
 export function CategoriesPage() {
-  const {
+  /*const {
     revenueCategories,
     spentCategories,
     revenues,
@@ -41,30 +47,47 @@ export function CategoriesPage() {
     addSpentCategory,
     updateSpentCategory,
     deleteSpentCategory,
-  } = useData()
+  } = useData()*/
 
   const [activeTab, setActiveTab] = useState("revenue")
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState("")
   const [editingCategory, setEditingCategory] = useState<{ id: string; name: string } | null>(null)
+  const [revenueCategories, setRevenueCategories] = useState<Category[]>([])
+  const [spentCategories, setSpentCategories] = useState<Category[]>([])
 
-  // Calcular contagem de uso para cada categoria
-  const revenueCategoriesWithCount = revenueCategories.map((category) => {
-    const count = revenues.filter((revenue) => revenue.categories.includes(category.id)).length
-    return { ...category, count }
-  })
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  const spentCategoriesWithCount = spentCategories.map((category) => {
-    const count = spents.filter((spent) => spent.categories.includes(category.id)).length
-    return { ...category, count }
-  })
+  async function fetchData(){
+    try{
+      const revenueCategoriesWithCount = await fetch("/api/revenues/category/getRevenueCounts");
+      if(!revenueCategoriesWithCount){
+        throw new Error("Error fetching data");
+      }
 
-  const filteredRevenueCategories = revenueCategoriesWithCount.filter((category) =>
+      const spentCategoriesWithCount = await fetch("/api/spents/category/getSpentCounts");
+      if(!spentCategoriesWithCount){
+        throw new Error("Error fetching data");
+      }
+
+      setRevenueCategories(await revenueCategoriesWithCount.json());
+      setSpentCategories(await spentCategoriesWithCount.json());
+    }
+    catch (error){
+      console.log(error)
+      alert("Erro ao carregar dados")
+    }
+  }
+
+
+  const filteredRevenueCategories = revenueCategories.filter((category) =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const filteredExpenseCategories = spentCategoriesWithCount.filter((category) =>
+  const filteredExpenseCategories = spentCategories.filter((category) =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
