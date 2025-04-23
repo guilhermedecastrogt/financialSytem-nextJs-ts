@@ -78,3 +78,124 @@ export async function GET(){
     }
 }
 
+export async function PUT(req: Request, res: Response){
+    try{
+        const session = "fazer a autenticacao de login aqui"
+        if(!session){
+            return NextResponse.json(
+                { error: "Não autorizado" },
+                { status: 401 }
+            )
+        }
+
+        const body = await req.json();
+        if(!body || typeof body !== "object"){
+            return NextResponse.json(
+                { error: "Dados Inválidos" },
+                { status: 400 }
+            )
+        }
+
+        const { name, id } = body;
+        if( !name || !id ){
+            return NextResponse.json(
+                { error: "Dados incompletos "},
+                { status: 400 }
+            )
+        }
+        const slug = slugify(name);
+
+        const updatedRevenueCategory =
+        await prisma.revenueCategory.update
+        ({
+            where: {
+                id: id
+            },
+            data: {
+                name,
+                slug
+            }
+        })
+
+        return NextResponse.json(
+            updatedRevenueCategory,
+            { status: 201 }
+        )
+    }
+    catch(error){
+        console.log("Erro ao editar categorias", error);
+        return NextResponse.json(
+            { error: "Erro ao editar categorias" },
+            { status: 500 }
+        )
+    }
+}
+
+export async function DELETE(req: Request, res: Response){
+    try{
+        const session = "fazer a autenticacao de login aqui"
+        if(!session){
+            return NextResponse.json(
+                { error: "Não autorizado" },
+                { status: 401 }
+            )
+        }
+
+        const body = await req.json();
+        if(!body || typeof body !== "object"){
+            return NextResponse.json(
+                { error: "Dados inválidos "},
+                { status: 400 }
+            )
+        }
+
+        const { id } = body;
+
+        const count = await prisma.revenueCategory.findFirst({
+            where: {
+                id: id
+            },
+            select: {
+                name: true,
+                _count: {
+                    select: {
+                        revenues: true,
+                        monthlyRevenues: true
+                    }
+                }
+            }
+        })
+
+        if(!count){
+            return NextResponse.json(
+                { error: "Não foi possível deletar categoria erro: Categoria inexistente"},
+                { status: 400 }
+            )
+        }
+
+        if((count._count.revenues + count._count.monthlyRevenues) > 0){
+            return NextResponse.json(
+                { error: "Categoria com alguma receita cadastrada"},
+                { status: 400 }
+            )
+        }
+
+        const removedRevenueCategory = await prisma.revenueCategory.delete({
+            where: {
+                id: id
+            }
+        })
+
+        return NextResponse.json(
+            removedRevenueCategory,
+            { status: 201 }
+        )
+    }
+    catch(error){
+        console.log("Erro ao deletar categorias", error);
+        return NextResponse.json(
+            { error: "Erro ao deletar categorias" },
+            { status: 500 }
+        )
+    }
+}

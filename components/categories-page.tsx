@@ -32,7 +32,8 @@ import {NextResponse} from "next/server";
 type Category = {
   id: string,
   name: string,
-  revenueCount: number,
+  count: number,
+  slug: string
 }
 
 export function CategoriesPage() {
@@ -118,24 +119,58 @@ export function CategoriesPage() {
     }
   }
 
-  const handleEditCategory = () => {
+  async function handleEditCategory(){
     if (!editingCategory) return
 
     if (activeTab === "revenue") {
-      updateRevenueCategory(editingCategory.id, newCategoryName)
+      const res = await fetch("/api/revenues/category", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCategoryName, id: editingCategory.id }),
+      })
+
+      if(!res.ok) {
+        alert("Falha ao editar categoria de receitas")
+        throw new Error("Falha ao editar categoria")
+      }
     } else {
-      updateSpentCategory(editingCategory.id, newCategoryName)
+      const res = await fetch("/api/spents/category", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCategoryName, id: editingCategory.id }),
+      })
+
+      if(!res.ok) {
+        alert("Falha ao editar categoria")
+        throw new Error("Falha ao editar categoria")
+      }
     }
 
     setNewCategoryName("")
     setEditingCategory(null)
   }
 
-  const handleDeleteCategory = (id: string) => {
+  async function handleDeleteCategory (id: string){
     if (activeTab === "revenue") {
-      deleteRevenueCategory(id)
+      const res = await fetch("/api/revenues/category", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id })
+      })
+      if(!res.ok) {
+        alert("Falha ao deletar categoria de receitas")
+        throw new Error("Falha ao deletar categoria")
+      }
     } else {
-      deleteSpentCategory(id)
+      const res = await fetch("/api/spents/category", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id })
+      })
+      if(!res.ok) {
+        alert("Falha ao deletar categoria de despesas")
+        throw new Error("Falha ao deletar categoria")
+      }
     }
   }
 

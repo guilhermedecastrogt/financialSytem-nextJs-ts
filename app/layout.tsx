@@ -5,38 +5,41 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Sidebar } from "@/components/sidebar"
 import { DataProvider } from "@/lib/data-context"
+import { AuthProvider } from "@/lib/auth-context"
+import { Toaster } from "@/components/ui/toaster"
+import SessionProviderWrapper from "./providers/SessionProviderWrapper"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Sistema Financeiro",
   description: "Sistema de gerenciamento financeiro para receitas e despesas",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({
-  children,
-}: Readonly<{
+                                     children,
+                                   }: Readonly<{
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning>
+      <html lang="pt-BR" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+        <AuthProvider>
           <DataProvider>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex-1 lg:ml-64 transition-all duration-300">
-                <main className="h-screen overflow-y-auto p-6 md:p-8">{children}</main>
-              </div>
-            </div>
+              <SessionProviderWrapper>
+                  <div className="flex min-h-screen">
+                      <Sidebar />
+                      <div className="flex-1 lg:ml-64 transition-all duration-300">
+                          <main className="h-screen overflow-y-auto p-6 md:p-8">{children}</main>
+                      </div>
+                  </div>
+                  <Toaster />
+              </SessionProviderWrapper>
           </DataProvider>
-        </ThemeProvider>
+        </AuthProvider>
+      </ThemeProvider>
       </body>
-    </html>
+      </html>
   )
 }
-
-
-
-import './globals.css'

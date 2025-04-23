@@ -3,15 +3,15 @@ import {NextResponse} from "next/server";
 
 export async function GET(){
     try {
-        const categories = await prisma.revenueCategory.findMany({
+        const categories = await prisma.spentCategory.findMany({
             select: {
                 id: true,
                 name: true,
                 slug: true,
                 _count: {
                     select: {
-                        revenues: true,
-                        monthlyRevenues: true,
+                        spents: true,
+                        monthlySpents: true,
                     }
                 }
             }
@@ -21,7 +21,7 @@ export async function GET(){
             categories.map(c => ({
                 id: c.id,
                 name: c.name,
-                count: (c._count.revenues+c._count.monthlyRevenues),
+                count: (c._count.spents + c._count.monthlySpents),
             })),
             { status: 201 }
         )
