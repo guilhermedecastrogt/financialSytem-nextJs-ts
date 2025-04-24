@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import {getServerSession} from "next-auth/next";
+import {authOptions} from "@/app/api/auth/[...nextauth]/auth";
 
 export async function POST(req: Request) {
     try{
-        const session = "realizar autenticacao aqui";
-        if(!session){
-            return NextResponse.json({ error: "Não autorizado" }, { status:500 });
+        const session = await getServerSession(authOptions)
+
+        if (!session) {
+            return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
         }
 
         const body = await req.json();

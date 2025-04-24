@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { signIn, useSession } from "next-auth/react";
+import argon2 from "argon2";
 
 
 export function LoginForm() {
@@ -24,7 +25,7 @@ export function LoginForm() {
 
     useEffect(() => {
         if (status === "authenticated") {
-            router.push("/admin/empregos");
+            router.push("/");
         }
     }, [status, router]);
 

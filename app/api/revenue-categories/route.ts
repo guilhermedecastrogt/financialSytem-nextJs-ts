@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server"
 import prisma from "@/lib/prisma"
 import { slugify } from "@/lib/utils"
+import {getServerSession} from "next-auth/next";
+import {authOptions} from "@/app/api/auth/[...nextauth]/auth";
 
 export async function GET() {
+
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
+  }
+
   try {
     const categories = await prisma.revenueCategory.findMany({
       orderBy: {
@@ -18,6 +27,13 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+
+  const session = await getServerSession(authOptions)
+
+  if (!session) {
+    return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
+  }
+
   try {
     const { name } = await request.json()
 

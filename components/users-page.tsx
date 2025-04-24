@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Edit, Search, Trash2, UserPlus, UsersIcon, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,34 +29,68 @@ import {
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 
+type AdminUser = {
+    id: number
+    username: string
+    email: string
+    password?: string
+}
+
 export function UsersPage() {
     const { toast } = useToast()
+    const [users, setUsers] = useState<AdminUser[]>([])
     const [searchTerm, setSearchTerm] = useState("")
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-
-    // Estados para o formulário de adição
     const [newUsername, setNewUsername] = useState("")
     const [newEmail, setNewEmail] = useState("")
     const [newPassword, setNewPassword] = useState("")
-
-    // Estados para edição inline
-    const [editingUserId, setEditingUserId] = useState<string | null>(null)
+    const [editingUserId, setEditingUserId] = useState<number | null>(null)
     const [editUsername, setEditUsername] = useState("")
     const [editEmail, setEditEmail] = useState("")
     const [editPassword, setEditPassword] = useState("")
+    const [userToDelete, setUserToDelete] = useState<number | null>(null)
+    const [currentUser, setCurrentUser] = useState<AdminUser | null>(null)
 
-    // Estado para o usuário a ser excluído
-    const [userToDelete, setUserToDelete] = useState<string | null>(null)
+    useEffect(() => {
+        fetch("/api/admins")
+            .then(res => res.json())
+            .then(data => setUsers(data))
+    }, [])
 
-    // Filtrar usuários com base no termo de busca
+    const addUser = async (username: string, email: string, password: string) => {
+        const res = await fetch("/api/admins", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password }),
+        })
+        const newUser: AdminUser = await res.json()
+        setUsers([...users, newUser])
+    }
+
+    const updateUser = async (id: number, data: Partial<AdminUser>) => {
+        const res = await fetch(`/api/admins/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        })
+        const updatedUser: AdminUser = await res.json()
+        setUsers(users.map(u => (u.id === id ? updatedUser : u)))
+    }
+
+    const deleteUser = async (id: number) => {
+        await fetch(`/api/admins/${id}`, {
+            method: "DELETE"
+        })
+        setUsers(users.filter(u => u.id !== id))
+    }
+
     const filteredUsers = users.filter(
         (user) =>
             user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email.toLowerCase().includes(searchTerm.toLowerCase()),
     )
 
-    // Iniciar edição de um usuário
-    const startEditing = (userId: string) => {
+    const startEditing = (userId: number) => {
         const user = users.find((u) => u.id === userId)
         if (user) {
             setEditingUserId(userId)
@@ -66,7 +100,6 @@ export function UsersPage() {
         }
     }
 
-    // Cancelar edição
     const cancelEditing = () => {
         setEditingUserId(null)
         setEditUsername("")
@@ -74,60 +107,30 @@ export function UsersPage() {
         setEditPassword("")
     }
 
-    // Salvar edição
     const saveEditing = () => {
-        if (!editingUserId) return
-
-        const updateData: { username: string; email: string; password?: string } = {
-            username: editUsername,
-            email: editEmail,
-        }
-
-        // Só atualizar a senha se foi fornecida
-        if (editPassword) {
-            updateData.password = editPassword
-        }
-
+        if (editingUserId === null) return
+        const updateData: Partial<AdminUser> = { username: editUsername, email: editEmail }
+        if (editPassword) updateData.password = editPassword
         updateUser(editingUserId, updateData)
-
-        toast({
-            title: "Usuário atualizado",
-            description: "As informações do usuário foram atualizadas com sucesso.",
-        })
-
+        toast({ title: "Usuário atualizado" })
         cancelEditing()
     }
 
-    // Adicionar novo usuário
     const handleAddUser = () => {
         addUser(newUsername, newEmail, newPassword)
-
-        toast({
-            title: "Usuário adicionado",
-            description: "O novo usuário foi adicionado com sucesso.",
-        })
-
+        toast({ title: "Usuário adicionado" })
         setNewUsername("")
         setNewEmail("")
         setNewPassword("")
         setIsAddDialogOpen(false)
     }
 
-    // Confirmar exclusão de usuário
-    const confirmDelete = (userId: string) => {
-        setUserToDelete(userId)
-    }
+    const confirmDelete = (userId: number) => setUserToDelete(userId)
 
-    // Executar exclusão de usuário
     const handleDeleteUser = () => {
-        if (userToDelete) {
+        if (userToDelete !== null) {
             deleteUser(userToDelete)
-
-            toast({
-                title: "Usuário excluído",
-                description: "O usuário foi excluído com sucesso.",
-            })
-
+            toast({ title: "Usuário excluído" })
             setUserToDelete(null)
         }
     }

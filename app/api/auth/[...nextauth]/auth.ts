@@ -60,7 +60,7 @@ const authOptions: AuthOptions = {
         },
     },
     pages: {
-        signIn: "/admin/login",
+        signIn: "/",
     },
     secret: process.env.NEXTAUTH_SECRET,
     session: {

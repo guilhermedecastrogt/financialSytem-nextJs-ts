@@ -1,15 +1,14 @@
 import { NextResponse} from "next/server";
 import prisma from "@/lib/prisma";
+import {getServerSession} from "next-auth/next";
+import {authOptions} from "@/app/api/auth/[...nextauth]/auth";
 
 export async function POST(req: Request) {
     try{
-        const session = "fazer a autenticacao de login aqui"
+        const session = await getServerSession(authOptions)
 
-        if(!session){
-            return NextResponse.json(
-                { error: "Não autorizado" },
-                { status: 401 }
-            )
+        if (!session) {
+            return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
         }
 
         const body = await req.json();
@@ -57,6 +56,12 @@ function slugify(name: string): string {
 
 export async function GET(){
     try{
+        const session = await getServerSession(authOptions)
+
+        if (!session) {
+            return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
+        }
+
         const revenueCategory = await prisma.revenueCategory.findMany({
             orderBy: { createdAt: "desc" }
         })
@@ -80,12 +85,11 @@ export async function GET(){
 
 export async function PUT(req: Request, res: Response){
     try{
-        const session = "fazer a autenticacao de login aqui"
-        if(!session){
-            return NextResponse.json(
-                { error: "Não autorizado" },
-                { status: 401 }
-            )
+
+        const session = await getServerSession(authOptions)
+
+        if (!session) {
+            return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
         }
 
         const body = await req.json();
@@ -133,12 +137,10 @@ export async function PUT(req: Request, res: Response){
 
 export async function DELETE(req: Request, res: Response){
     try{
-        const session = "fazer a autenticacao de login aqui"
-        if(!session){
-            return NextResponse.json(
-                { error: "Não autorizado" },
-                { status: 401 }
-            )
+        const session = await getServerSession(authOptions)
+
+        if (!session) {
+            return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
         }
 
         const body = await req.json();
