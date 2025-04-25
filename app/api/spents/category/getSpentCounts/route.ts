@@ -1,8 +1,15 @@
 import prisma from "@/lib/prisma";
 import {NextResponse} from "next/server";
+import {getServerSession} from "next-auth/next";
+import {authOptions} from "@/app/api/auth/[...nextauth]/auth";
 
 export async function GET(){
     try {
+        const session = await getServerSession(authOptions)
+
+        if (!session) {
+            return NextResponse.json({ error: "Não autorizado. Faça login primeiro." }, { status: 401 })
+        }
         const categories = await prisma.spentCategory.findMany({
             select: {
                 id: true,
