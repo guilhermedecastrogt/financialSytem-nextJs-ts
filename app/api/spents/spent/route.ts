@@ -44,9 +44,7 @@ export async function POST(req: Request) {
 
 export async function GET (){
     const session = await getServerSession(authOptions)
-    if (!session) {
-        return NextResponse.json( { error: "Não autorizado"}, { status: 401 })
-    }
+    if (!session) { return NextResponse.json( { error: "Não autorizado"}, { status: 401 }) }
     try{
         const spents = await prisma.spent.findMany({
             include: {

@@ -48,35 +48,39 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { DateRange } from "react-day-picker"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import { useData } from "@/lib/data-context"
-import { useAllSpents } from "@/lib/hooks/spents/useAllSpents"
+import { useAllSpents } from "@/hooks/spents/useAllSpents"
+import { useCategories } from "@/hooks/spents/useCategories"
 import { useToast } from "@/components/ui/use-toast"
 
-type Category = {
+// Atualizar a interface para refletir a estrutura real dos dados
+interface Expense {
   id: string
   name: string
+  date: string | Date
+  value: number
+  status: boolean
+  description?: string
+  categories: {
+    id: string
+    name: string
+    slug: string
+    createdAt: string
+    updatedAt: string
+  }[]
 }
 
-// Primeiro, vamos definir uma interface para a categoria agrupada
+// Atualizar a interface ExpenseCategoryGroup para usar a estrutura correta
 interface ExpenseCategoryGroup {
   id: string
   name: string
   total: number
   count: number
-  items: Array<{
-    id: string
-    name: string
-    date: string | Date
-    value: number
-    status: boolean
-    categories: Category[]
-    description?: string
-  }>
+  items: Expense[]
 }
 
 export function ExpensesPage() {
-  const { spents, isLoading, isError } = useAllSpents()
-  const { spentCategories } = useData()
+  const { spents, isLoading: spentsLoading, isError: spentsError } = useAllSpents()
+  const { categories, isLoading: categoriesLoading, isError: categoriesError } = useCategories()
   const { toast } = useToast()
   const [date, setDate] = useState<DateRange | undefined>({
     from: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
@@ -93,12 +97,12 @@ export function ExpensesPage() {
   })
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
 
-  // Filtrar despesas com base nos critérios selecionados
+  // Modificar a lógica de filtragem para verificar o ID dentro dos objetos de categoria
   const filteredExpenses =
       spents?.filter((expense) => {
         const matchesSearch = expense.name.toLowerCase().includes(searchTerm.toLowerCase())
         const matchesCategory =
-            selectedCategory === "all" || expense.categories.some((cat: Category) => cat.id === selectedCategory)
+            selectedCategory === "all" || expense.categories.some((cat) => cat.id === selectedCategory)
 
         const matchesStatus =
             selectedStatus === "all" ||
@@ -149,10 +153,10 @@ export function ExpensesPage() {
       .filter((expense) => !expense.status)
       .reduce((sum, expense) => sum + expense.value, 0)
 
-  // Agora, vamos atualizar a parte onde agrupamos as despesas por categoria
+  // Atualizar a lógica de agrupamento por categoria para usar os objetos de categoria diretamente
   const expensesByCategory = filteredExpenses.reduce(
       (acc, expense) => {
-        expense.categories.forEach((cat: Category) => {
+        expense.categories.forEach((cat) => {
           if (!acc[cat.id]) {
             acc[cat.id] = {
               id: cat.id,
@@ -171,19 +175,20 @@ export function ExpensesPage() {
       {} as Record<string, ExpenseCategoryGroup>,
   )
 
-  // Exportar dados para CSV
+  // Atualizar a função de exportação CSV para usar os objetos de categoria diretamente
   const exportToCSV = () => {
     const headers = ["Nome", "Data", "Valor", "Categorias", "Status"]
     const csvData = sortedExpenses.map((expense) => [
       expense.name,
       formatDate(expense.date),
       expense.value.toString(),
-      expense.categories.map((cat: Category) => cat.name).join(", "),
+      expense.categories.map((cat) => cat.name).join(", "),
       expense.status ? "Pago" : "Pendente",
     ])
 
     const csvContent = [headers.join(","), ...csvData.map((row) => row.join(","))].join("\n")
 
+    // Fix the Blob creation to handle the string correctly
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
@@ -245,6 +250,10 @@ export function ExpensesPage() {
       to: new Date(),
     })
   }
+
+  // Verificar se está carregando
+  const isLoading = spentsLoading || categoriesLoading
+  const isError = spentsError || categoriesError
 
   // Renderizar estado de carregamento
   if (isLoading) {
@@ -387,11 +396,20 @@ export function ExpensesPage() {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todas as categorias</SelectItem>
-                        {spentCategories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                        ))}
+                        {/* Usar um Set para obter categorias únicas de todas as despesas */}
+                        {Array.from(
+                            new Set(
+                                spents
+                                    ?.flatMap((expense) => expense.categories)
+                                    .map((cat) => JSON.stringify({ id: cat.id, name: cat.name })),
+                            ),
+                        )
+                            .map((cat) => JSON.parse(cat))
+                            .map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </SelectItem>
+                            ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -489,9 +507,10 @@ export function ExpensesPage() {
                               <TableCell className="font-medium">{expense.name}</TableCell>
                               <TableCell>{formatDate(expense.date)}</TableCell>
                               <TableCell className="text-destructive">{formatCurrency(expense.value)}</TableCell>
+                              {/* Atualizar a exibição das categorias na tabela para usar os objetos de categoria diretamente */}
                               <TableCell>
                                 <div className="flex flex-wrap gap-1">
-                                  {expense.categories.map((cat: Category) => (
+                                  {expense.categories.map((cat) => (
                                       <Badge key={cat.id} variant="outline" className="whitespace-nowrap">
                                         {cat.name}
                                       </Badge>

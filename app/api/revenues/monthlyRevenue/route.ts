@@ -44,3 +44,25 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: error }, { status:500 });
     }
 }
+
+export async function GET (){
+    const session = await getServerSession(authOptions)
+    if (!session) { return NextResponse.json( { error: "Não autorizado"}, { status: 401 }) }
+    try{
+        const revenues = await prisma.monthlyRevenue.findMany({
+            include: {
+                categories: true
+            }, orderBy: {
+                date: "desc"
+            }
+        })
+
+        return NextResponse.json(
+            revenues,
+            { status: 200 }
+        );
+    } catch(error) {
+        console.log(error);
+        return NextResponse.json({ error: "Erro ao buscar receitas"}, { status: 500})
+    }
+}
