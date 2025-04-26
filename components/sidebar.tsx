@@ -21,31 +21,23 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { useAuth } from "@/lib/auth-context"
+import { useSession, signOut } from "next-auth/react"
 
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { isAuthenticated, logout, currentUser } = useAuth()
+  const { data: session, status } = useSession()
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
 
-  // Redirecionar para a página de login se não estiver autenticado
   useEffect(() => {
-    if (!isAuthenticated && pathname !== "/login") {
+    if (status === "unauthenticated" && pathname !== "/login") {
       router.push("/login")
     }
-  }, [isAuthenticated, pathname, router])
+  }, [status, pathname, router])
 
-  // Se não estiver autenticado, não renderizar a sidebar
-  if (!isAuthenticated && pathname !== "/login") {
-    return null
-  }
-
-  // Se estiver na página de login, não renderizar a sidebar
-  if (pathname === "/login") {
-    return null
-  }
+  if (status === "loading") return null
+  if (status === "unauthenticated" || pathname === "/login") return null
 
   const routes = [
     {
@@ -92,9 +84,7 @@ export function Sidebar() {
     },
   ]
 
-  const toggleMinimized = () => {
-    setIsMinimized(!isMinimized)
-  }
+  const toggleMinimized = () => setIsMinimized(!isMinimized)
 
   return (
       <>
@@ -111,9 +101,7 @@ export function Sidebar() {
             )}
         >
           <div className="flex h-full flex-col">
-            <div
-                className={cn("flex items-center border-b px-6 py-4", isMinimized ? "justify-center" : "justify-between")}
-            >
+            <div className={cn("flex items-center border-b px-6 py-4", isMinimized ? "justify-center" : "justify-between")}>
               <Link href="/" className={cn("flex items-center gap-2 font-semibold", isMinimized && "justify-center")}>
                 <BarChart3 className="h-6 w-6 text-primary" />
                 {!isMinimized && <span>Sistema Financeiro</span>}
@@ -166,15 +154,17 @@ export function Sidebar() {
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={logout} className="gap-2 text-destructive">
+                      <Button variant="ghost" size="sm" onClick={() => signOut()} className="gap-2 text-destructive">
                         <LogOut className="h-4 w-4" />
                         Sair
                       </Button>
                     </div>
-                    {currentUser && (
+                    {session?.user && (
                         <div className="mt-4 text-xs text-muted-foreground">
                           <p>Logado como:</p>
-                          <p className="font-medium text-foreground">{currentUser.username}</p>
+                          <p className="font-medium text-foreground">
+                            {session.user.name || session.user.email}
+                          </p>
                         </div>
                     )}
                   </>
@@ -195,7 +185,7 @@ export function Sidebar() {
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={logout} className="text-destructive" title="Sair">
+                    <Button variant="ghost" size="icon" onClick={() => signOut()} className="text-destructive" title="Sair">
                       <LogOut className="h-4 w-4" />
                     </Button>
                   </div>

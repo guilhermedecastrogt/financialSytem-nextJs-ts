@@ -89,8 +89,8 @@ export function RevenuesPage() {
 
         const matchesStatus =
             selectedStatus === "all" ||
-            (selectedStatus === "paid" && revenue.status === "pago") ||
-            (selectedStatus === "pending" && revenue.status === "pendente")
+            (selectedStatus === "paid" && (revenue.status === "pago")) ||
+            (selectedStatus === "pending" && (revenue.status === "pendente"))
 
         // Filtrar por data se o intervalo estiver definido
         const matchesDate =
@@ -189,12 +189,21 @@ export function RevenuesPage() {
   }
 
   // Simular exclusão de item
-  const handleDelete = (id: string) => {
-    // Aqui você chamaria a API para excluir o item
-    toast({
-      title: "Item excluído",
-      description: "A receita foi excluída com sucesso.",
+  async function handleDelete(id: string) {
+    const res = await fetch(`/api/revenues/${id}`, {
+      method: "DELETE",
     })
+    if (!res.ok) {
+      toast({
+        title: "Erro ao excluir",
+      })
+    } else {
+      window.location.reload()
+      toast({
+        title: "Item excluído",
+        description: "A receita foi excluída com sucesso.",
+      })
+    }
     setItemToDelete(null)
   }
 

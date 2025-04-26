@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import {useEffect, useState} from "react"
 import {
   ArrowDown,
   ArrowUp,
@@ -42,6 +42,8 @@ import { subMonths } from "date-fns"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData"
 import Link from "next/link"
+import {useSession} from "next-auth/react";
+import {usePathname, useRouter} from "next/navigation";
 
 export function DashboardPage() {
   const [date, setDate] = useState<DateRange | undefined>({
@@ -50,6 +52,15 @@ export function DashboardPage() {
   })
   const [period, setPeriod] = useState<string>("3months")
   const [view, setView] = useState<string>("overview")
+  const { data: session, status } = useSession()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === "unauthenticated" && pathname !== "/login") {
+      router.push("/login")
+    }
+  }, [status, pathname, router])
 
   // Modificar a chamada do hook para passar o intervalo de datas
   const {

@@ -206,13 +206,23 @@ export function ExpensesPage() {
   }
 
   // Simular exclusão de item
-  const handleDelete = (id: string) => {
-    // Aqui você chamaria a API para excluir o item
-    toast({
-      title: "Item excluído",
-      description: "A despesa foi excluída com sucesso.",
-    })
-    setItemToDelete(null)
+  async function handleDelete (id: string) {
+    const res = await fetch(`/api/spents/${id}`, {
+      method: "DELETE",
+    });
+    if(!res.ok){
+      toast({
+        title: "Erro ao excluit item!",
+      })
+    }
+    else{
+      window.location.reload()
+      toast({
+        title: "Item excluído",
+        description: "A despesa foi excluída com sucesso.",
+      })
+      setItemToDelete(null)
+    }
   }
 
   // Limpar filtros
